@@ -82,23 +82,51 @@
         var crossInfo = document.querySelector(".crossInfo");
         var btnStart = document.querySelector(".btnStart");
         var baddy = document.querySelector(".baddy");
+        var myContainer = {
+            width: container.offsetWidth,
+            height: container.offsetHeight,
+            left: container.offsetLeft,
+            top: container.offsetTop
+        }
         container.addEventListener('mousemove', move, true);
         btnStart.addEventListener('click',startGame,true);
         function startGame(){
             if(!gameplay){
+                setupBadguys(10);
                 score=0;
                 gameplay=true;
                 reqUpdate = window.requestAnimationFrame(update);
             }
         }
+         
+        function setupBadguys(num){
+            for(var x=0; x<num; x++){
+                badMaker();
+            }
+        }
+        function badMaker(){
+            var div = document.createElement('div');
+            var randomWidth = Math.floor(Math.random()*50+50);
+            var x = Math.floor(Math.random()*(myContainer.width-randomWidth));
+            var y = Math.floor(Math.random()*(myContainer.height-randomWidth));
+            div.innerHTML = "Badguy";
+            div.setAttribute('class', 'baddy');
+            div.style.left = x + 'px';
+            div.style.top = y + 'px';
+            container.appendChild(div);
+        }
         function update(){
-            console.log("game in play");
-            console.log(isCollision(crossHair,baddy));
+            // console.log("game in play");
+            // console.log(isCollision(crossHair,baddy));
             if(!gameplay){
                 window.cancelAnimationFrame(reqUpdate); 
             }else{
                 reqUpdate=window.requestAnimationFrame(update);
                 
+            }
+            var tempEnemy = document.querySelectorAll(".baddy");
+            for(var enemy of tempEnemy){
+                console.log(isCollision(crossInfo, enemy));
             }
         }
         function isCollision(a,b){
