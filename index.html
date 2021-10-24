@@ -45,8 +45,8 @@
                     left: 0;
                     width: 100px;
                     height: 100px;
-                    padding: 4px;
-                    background-color: red;
+                    padding: 5px;
+                    background-color: rgba(0,0,0,0.1);
                     box-shadow: 0px 1px 8px 0px black;
                     border-radius: 50px;
                     text-align: center;
@@ -74,7 +74,11 @@
             </div>
         </div>
     </body>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" crossorigin="anonymous">
+
+    </script>
     <script>
+        var icons = ["bath", "bug", "coffee", "telegram", "laptop", "quora"];
         var score;
         var gameplay;
         var container = document.querySelector(".container");
@@ -92,7 +96,7 @@
         btnStart.addEventListener('click',startGame,true);
         function startGame(){
             if(!gameplay){
-                setupBadguys(10);
+                setupBadguys(1);
                 score=0;
                 gameplay=true;
                 reqUpdate = window.requestAnimationFrame(update);
@@ -109,15 +113,28 @@
             var randomWidth = Math.floor(Math.random()*50+50);
             var x = Math.floor(Math.random()*(myContainer.width-randomWidth));
             var y = Math.floor(Math.random()*(myContainer.height-randomWidth));
-            div.innerHTML = "Badguy";
+            var icon = "fa-"+icons[Math.floor(Math.random()*icons.length)];
+            div.innerHTML = '<i class= "fa '+icon+'"></i>';
             div.setAttribute('class', 'baddy');
+            div.style.fontSize = randomWidth + 'px';
+            div.style.lineHeight = randomWidth - (randomWidth*0.3) + 'px';
+            div.style.height = randomWidth + 'px';
             div.style.left = x + 'px';
             div.style.top = y + 'px';
+            div.dataset.dir = Math.ceil(Math.random()*4);
+            div.dataset.mover = Math.ceil(Math.random()*15)+2;
+            div.style.color = randomColor();
             container.appendChild(div);
         }
+        function randomColor(){
+            function c(){
+                var hex = Math.floor(Math.random()*256).toString(16);
+                var response = ("0"+String(hex)).substr(-2);
+                return response;
+            }
+            return "#"+c()+c()+c();
+        }
         function update(){
-            // console.log("game in play");
-            // console.log(isCollision(crossHair,baddy));
             if(!gameplay){
                 window.cancelAnimationFrame(reqUpdate); 
             }else{
@@ -127,7 +144,28 @@
             var tempEnemy = document.querySelectorAll(".baddy");
             for(var enemy of tempEnemy){
                 console.log(isCollision(crossInfo, enemy));
+                itemMover(enemy);
             }
+        }
+
+        function itemMover(e){
+            console.log(e);
+            var x = parseInt(e.style.left);
+            var y = parseInt(e.style.top);
+            var sp = parseInt(e.dataset.speed);
+            if(e.dataset.mover <= 0){
+                e.dataset.speed = Math.ceil(Math.random()*10)+2;
+                e.dataset.dir = Math.ceil(Math.random()*4);
+                e.dataset.mover = Math.ceil(Math.random()*15)+2;
+            }else{
+                e.dataset.mover--;
+                if(e.dataset.dir == 1 && x < myContainer.width){x+=sp};
+                if(e.dataset.dir == 2 && x > 0){x-=sp};
+                if(e.dataset.dir == 3 && y < myContainer.height){y+=sp};
+                if(e.dataset.dir == 4 && y > 0){y-=sp};
+            }
+            e.style.left = x + 'px';
+            e.style.top = y + 'px';
         }
         function isCollision(a,b){
             var aReact = a.getBoundingClientRect();
