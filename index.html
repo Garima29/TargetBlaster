@@ -60,6 +60,18 @@
                     color: white;
                     font-size: 2em;
                 }
+                .score{
+                    font-size: 4em;
+                }
+                .gameover{
+                    position: absolute;
+                    text-align: center;
+                    color: white;
+                    font-size: 3em;
+                    line-height: 300px;
+                    text-transform: uppercase;
+                    width: 100%;
+                }
             </style>
     </head>
     <body>
@@ -68,6 +80,7 @@
             Score:<span class="score">0</span>
         </div>
         <div class="container">
+            <div class="gameover">Click start button</div>
             <div class="baddy"></div>
             <div class="crossHair">
                 <div class="crossInfo"></div>
@@ -81,10 +94,14 @@
         var icons = ["bath", "bug", "coffee", "telegram", "laptop", "quora"];
         var score;
         var gameplay;
+        var mDown = false;
+        var BGCount;
+        var hazards;
         var container = document.querySelector(".container");
         var crossHair = document.querySelector(".crossHair");
         var crossInfo = document.querySelector(".crossInfo");
         var btnStart = document.querySelector(".btnStart");
+        var gameover = document.querySelector(".gameover");
         var baddy = document.querySelector(".baddy");
         var myContainer = {
             width: container.offsetWidth,
@@ -92,14 +109,28 @@
             left: container.offsetLeft,
             top: container.offsetTop
         }
+        container.addEventListener('mousedown', function(){ mDown=true}, true);
+        container.addEventListener('mouseup', function(){ mDown=false }, true);
         container.addEventListener('mousemove', move, true);
         btnStart.addEventListener('click',startGame,true);
         function startGame(){
             if(!gameplay){
-                setupBadguys(1);
+                BGCount=10;
+                setupBadguys(6);
                 score=0;
+                hazards=3;
                 gameplay=true;
+                gameover.style.display='none';
                 reqUpdate = window.requestAnimationFrame(update);
+            }
+        }
+        function endGame(){
+            gameover.style.display = 'block';
+            gameover.innerHTML ='GAME OVER <br> SCORE '+score;
+            gameplay = false;
+            var tempEnemy = document.querySelectorAll('.baddy');
+            for(var e of tempEnemy){
+                e.parentNode.removeChild(e);
             }
         }
          
@@ -110,11 +141,26 @@
         }
         function badMaker(){
             var div = document.createElement('div');
-            var randomWidth = Math.floor(Math.random()*50+50);
+            var randomWidth;
+            var iconRan;
+            if(hazards>0){
+                hazards--;
+                iconRan="fa-bomb";
+                div.dataset.points=0;
+                div.style.color='white';
+                div.style.backgroundColor='black';
+                div.dataset.points=0;
+                randomWidth=150;
+            }else{
+                div.dataset.points = Math.ceil(Math.random()*10)+2;
+                iconRan = "fa-"+icons[Math.floor(Math.random()*icons.length)];
+                 div.style.color = randomColor();
+                 randomWidth = Math.floor(Math.random()*50)+50;
+            }
             var x = Math.floor(Math.random()*(myContainer.width-randomWidth));
             var y = Math.floor(Math.random()*(myContainer.height-randomWidth));
-            var icon = "fa-"+icons[Math.floor(Math.random()*icons.length)];
-            div.innerHTML = '<i class= "fa '+icon+'"></i>';
+            
+            div.innerHTML = '<i class= "fa '+iconRan+'"></i>';
             div.setAttribute('class', 'baddy');
             div.style.fontSize = randomWidth + 'px';
             div.style.lineHeight = randomWidth - (randomWidth*0.3) + 'px';
@@ -123,7 +169,8 @@
             div.style.top = y + 'px';
             div.dataset.dir = Math.ceil(Math.random()*4);
             div.dataset.mover = Math.ceil(Math.random()*15)+2;
-            div.style.color = randomColor();
+            div.dataset.speed = Math.ceil(Math.random()*10)+2;
+           
             container.appendChild(div);
         }
         function randomColor(){
@@ -143,16 +190,31 @@
             }
             var tempEnemy = document.querySelectorAll(".baddy");
             for(var enemy of tempEnemy){
-                console.log(isCollision(crossInfo, enemy));
+                
                 itemMover(enemy);
             }
         }
+        function scoreUpdate(points){
+            score+=parseInt(points);
+            document.querySelector('.score').innerHTML = score;
+        }
 
         function itemMover(e){
-            console.log(e);
             var x = parseInt(e.style.left);
             var y = parseInt(e.style.top);
             var sp = parseInt(e.dataset.speed);
+            if(mDown && isCollision(crossInfo, e)){
+                if(e.dataset.points == 0){
+                    endGame();
+                    return;
+                }
+                    e.parentNode.removeChild(e);
+                    badMaker();
+                    BGCount--;
+                    scoreUpdate(e.dataset.points);
+                    if(BGCount < 0) {endGame();}
+                    return;
+                }
             if(e.dataset.mover <= 0){
                 e.dataset.speed = Math.ceil(Math.random()*10)+2;
                 e.dataset.dir = Math.ceil(Math.random()*4);
